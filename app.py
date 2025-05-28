@@ -1,12 +1,14 @@
 import streamlit as st
-import openai
 import os
+from openai import OpenAI
 
+# Inicializácia klienta
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Streamlit UI
 st.set_page_config(page_title="Virtuálny kvalitár Lukas", layout="centered")
 st.title("🤖 Virtuálny kvalitár Lukas")
 st.write("AI asistent pre kvalitu – IATF, 8D, FMEA, e-maily")
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 tab1, tab2, tab3 = st.tabs(["📋 8D report", "📨 Email zákazníkovi", "💬 Kvalita Q&A Chat"])
 lang = st.selectbox("Vyber jazyk výstupu:", ["Slovenčina", "Angličtina", "Nemčina"])
@@ -17,14 +19,14 @@ with tab1:
     if st.button("Vygeneruj 8D report"):
         if problem:
             with st.spinner("GPT-3.5 generuje 8D report..."):
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": f"Si expert na kvalitu, pomáhaj s 8D reportmi. Odpovedaj v jazyku: {lang}"},
                         {"role": "user", "content": f"Vygeneruj 8D report na tému: {problem}"}
                     ]
                 )
-                st.markdown(response["choices"][0]["message"]["content"])
+                st.markdown(response.choices[0].message.content)
         else:
             st.warning("Zadaj popis problému.")
 
@@ -34,14 +36,14 @@ with tab2:
     if st.button("Vytvoriť e-mail"):
         if email_topic:
             with st.spinner("GPT-3.5 tvorí e-mail..."):
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": f"Si kvalitár, píšeš oficiálne e-maily. Jazyk: {lang}"},
                         {"role": "user", "content": f"Vytvor e-mail zákazníkovi na tému: {email_topic}"}
                     ]
                 )
-                st.info(response["choices"][0]["message"]["content"])
+                st.info(response.choices[0].message.content)
         else:
             st.warning("Zadaj tému e-mailu.")
 
@@ -51,13 +53,13 @@ with tab3:
     if st.button("Získať odpoveď"):
         if question:
             with st.spinner("GPT-3.5 odpovedá..."):
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": f"Si AI expert na kvalitu. Jazyk: {lang}"},
                         {"role": "user", "content": question}
                     ]
                 )
-                st.success(response["choices"][0]["message"]["content"])
+                st.success(response.choices[0].message.content)
         else:
             st.warning("Zadaj otázku.")
